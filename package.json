@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "start": "concurrently \"npm run serve\" \"npm run tailwindcss\"",
+    "start": "concurrently \"npm run serve\" \"npm run tailwindcss:dev\"",
     "serve": "node index",
     "tailwindcss": "tailwindcss build ./src/tailwind.css -o ./public/tailwind.css",
     "tailwindcss:dev": "SET TAILWIND_MODE=watch & SET NODE_ENV=development & postcss ./src/tailwind.css -o ./public/tailwind.css -w"
