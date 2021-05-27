@@ -1,0 +1,5 @@
+node_modules
+public/models/**/*
+!public/models/Andy
+!public/models/Lion
+!public/models/ArcticFox

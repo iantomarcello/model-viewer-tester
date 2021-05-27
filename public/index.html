@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test | &lt;model-viewer&gt; </title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="./tailwind.css">
+  <style>
+    :root {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+  </style>
+</head>
+<body class="text-gray-200 w-full h-screen bg-gradient-to-br from-blue-600 via-blue-400 to-green-300">
+  <main class="max-w-7xl mx-auto p-6 h-full max-h-full overflow-hidden flex flex-col md:grid gap-3 md:grid-cols-12 " style="grid-template-rows: max-content 1fr">
+    <header class="col-start-4 col-end-13 row-start-1 row-end-2">
+      <h1 class="text-3xl text-center font-semibold">Google's <span>&lt;model-viewer&gt;</span></h1>
+    </header>
+
+    <nav class="max-h-full overflow-auto col-start-1 col-end-4 row-start-1 row-end-3 flex flex-col gap-3 pl-1 pr-6 pb-5scrollbar scrollbar-thin scrollbar-thumb-gray-200 order-3">
+      <p>Model list:</p>
+      <!-- Populated by JS -->
+    </nav>
+
+    <div class="w-full h-full col-start-4 col-end-13 row-start-2 row-auto order-2 relative">
+      <form class="absolute right-1 top-2 z-10 text-gray-600 text-xs">
+        <label class="px-4 py-2 bg-opacity-50 bg-gray-300 box-border"><input type="checkbox" id="toggleModelBackground"> Background</label>
+      </form>
+      <model-viewer src="./models/Andy/Andy.gltf" alt="A 3D model of Andriod"  class="w-full h-full relative -z-2" auto-rotate camera-controls></model-viewer>
+    </div>
+
+    <template>
+      <button class="px-5 py-3 bg-gray-100 bg-opacity-10 rounded-md" value="{value}">
+        <span class="text-md pointer-events-none">{title}</span>
+      </button>
+    </template>
+
+    <script src="./socket.io.min.js"></script>
+    <script>
+      const socket = io();
+      const viewer = document.querySelector('model-viewer');
+      const template = document.querySelector('template');
+      const nav = document.querySelector('nav');
+
+      /**
+       * Catch errors on <model-viewer>. 
+       */
+
+      viewer.addEventListener('error', ev => {
+        alert(`What ya loadin' ain't workin'`);
+        console.error(ev.detail);
+      })
+
+
+      function updateModelsList() {
+        return fetch('./models')
+          .then(res => res.json())
+          .then(models => {
+            // Cleanse
+            nav.querySelectorAll('button').forEach(button => button.remove());
+
+            // Populate
+            models.forEach(model => {
+              let clone = template.content.cloneNode(true);
+              clone.querySelector('button').value = model.url;
+              clone.querySelector('span').textContent = model.title;
+              nav.appendChild(clone);
+            })
+          })
+          .catch(console.error)
+      }
+      updateModelsList();
+
+
+      /**
+       * Click and update model-viewer.
+       */
+
+      nav.addEventListener('click', ev => {
+        const target = ev.target;
+        viewer.src = target.value;
+
+        nav.querySelectorAll('button').forEach(button => button.classList.remove('bg-gray-300'));
+        if ( target instanceof HTMLButtonElement ) {
+          target.classList.add('bg-gray-300');
+        }
+      });
+
+
+      /**
+       * Websocket to listen to `./public/models/` changes
+       */
+
+      socket.on('models_update', message => {
+        console.log(message);
+        updateModelsList();
+      });
+
+
+      /**
+       * Toggles <model-viewer> background
+       */
+
+      const skyboxImage = 'photo_studio_01_1k.hdr';
+      toggleModelBackground.addEventListener('change', function(ev) {
+        const checked = ev.target.checked;
+        if ( checked ) {
+          viewer.setAttribute('skybox-image', skyboxImage);
+        } else {
+          viewer.removeAttribute('skybox-image');
+        }
+      });
+
+    </script>
+  </main>
+</body>
+</html>
